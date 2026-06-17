@@ -1,0 +1,5 @@
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || ''
+export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+export const upiId = import.meta.env.VITE_UPI_ID || 'dharikha27-1@okhdfcbank'
+export const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || '916385395737'
+export const bakeryAddress = import.meta.env.VITE_BAKERY_ADDRESS || '22/1, King Street, Uvari, Tirunelveli, Tamil Nadu'

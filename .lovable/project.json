@@ -1,0 +1,23 @@
+{
+  "projectName": "Homemade Happiness",
+  "projectType": "web",
+  "framework": "react",
+  "createdAt": "2026-06-17T00:00:00.000Z",
+  "description": "Fresh from our home to your heart - A bakery ordering web application",
+  "features": [
+    "bakery-ordering",
+    "supabase-auth",
+    "cart-management",
+    "order-tracking",
+    "admin-dashboard"
+  ],
+  "techStack": {
+    "frontend": "React 18 + TypeScript",
+    "router": "TanStack Router",
+    "styling": "Tailwind CSS",
+    "ui": "shadcn/ui",
+    "state": "Zustand",
+    "backend": "Supabase",
+    "package": "Bun"
+  }
+}
