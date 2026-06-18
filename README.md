@@ -86,18 +86,6 @@ bun install
 bun dev
 ```
 
-### Environment Variables
-
-Copy `.env` and fill in your values:
-
-```env
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-VITE_UPI_ID=dharikha27-1@okhdfcbank
-VITE_WHATSAPP_NUMBER=916385395737
-VITE_BAKERY_ADDRESS=22/1, King Street, Uvari, Tirunelveli, Tamil Nadu
-```
-
 ### Supabase Setup
 
 1. Create a new Supabase project
