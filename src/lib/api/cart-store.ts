@@ -12,7 +12,7 @@ export interface CartItem {
 
 export interface CartStore {
   items: CartItem[]
-  addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void
+  addItem: (item: Omit<CartItem, 'quantity' | 'removedIngredients'> & { removedIngredients?: string[] }, quantity?: number) => void
   removeItem: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
@@ -26,7 +26,8 @@ export const useCartStore = create<CartStore>()(
       items: [],
       addItem: (item, quantity = 1) => {
         const items = get().items
-        const existingIndex = items.findIndex((i) => i.productId === item.productId)
+        const fullItem = { ...item, removedIngredients: item.removedIngredients ?? [] }
+        const existingIndex = items.findIndex((i) => i.productId === fullItem.productId)
         if (existingIndex > -1) {
           const updated = [...items]
           updated[existingIndex] = {
@@ -35,7 +36,7 @@ export const useCartStore = create<CartStore>()(
           }
           set({ items: updated })
         } else {
-          set({ items: [...items, { ...item, quantity }] })
+          set({ items: [...items, { ...fullItem, quantity }] })
         }
       },
       removeItem: (productId) => {

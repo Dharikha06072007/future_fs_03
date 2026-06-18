@@ -1,15 +1,28 @@
+import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { Trash2, Minus, Plus, ShoppingBag, ArrowLeft, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCartStore } from '@/lib/api/cart-store'
 
+const categoryEmoji: Record<string, string> = {
+  Cakes: '🎂', Cookies: '🍪', Pastries: '🥐', Breads: '🍞',
+  Muffins: '🧁', Cupcakes: '🧁', Brownies: '🍫', Donuts: '🍩',
+  Pies: '🥧', Tarts: '🍮', Cheesecakes: '🍰', Macarons: '🍡',
+}
+
 export const Route = createFileRoute('/cart')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
   const { items, removeItem, updateQuantity, total, itemCount } = useCartStore()
+
+  const getFallback = (name: string) => {
+    const cat = Object.entries(categoryEmoji).find(([_, emoji]) => name.includes(emoji))?.[0]
+    return categoryEmoji[cat || ''] || '🧁'
+  }
 
   if (items.length === 0) {
     return (
@@ -38,13 +51,25 @@ function RouteComponent() {
             {items.map((item) => (
               <Card key={item.productId} className="shadow-soft rounded-2xl">
                 <CardContent className="p-4 flex gap-4">
-                  <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-vanilla to-caramel shrink-0 flex items-center justify-center text-3xl shadow-sm">
-                    🧁
+                  <div className="w-24 h-24 rounded-xl shrink-0 overflow-hidden shadow-sm">
+                    {failedImages.has(item.productId) || !item.image ? (
+                      <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-3xl">
+                        {getFallback(item.name)}
+                      </div>
+                    ) : (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        onError={() => setFailedImages((prev) => new Set(prev).add(item.productId))}
+                      />
+                    )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-serif text-chocolate truncate">{item.name}</h3>
                     <p className="text-lg font-bold text-strawberry mt-1">₹{item.price}</p>
-                    {item.removedIngredients.length > 0 && (
+                    {item.removedIngredients && item.removedIngredients.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
                         {item.removedIngredients.map((ing) => (
                           <span key={ing} className="text-xs bg-[#C62828]/10 text-[#C62828] px-1.5 py-0.5 rounded-full">

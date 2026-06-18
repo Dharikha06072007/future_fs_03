@@ -1,9 +1,24 @@
+import { useEffect, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { Package, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/lib/api/use-auth'
+import { dishes } from '@/data/dishes'
+
+const categoryEmoji: Record<string, string> = {
+  Cakes: '🎂', Cookies: '🍪', Pastries: '🥐', Breads: '🍞',
+  Muffins: '🧁', Cupcakes: '🧁', Brownies: '🍫', Donuts: '🍩',
+  Pies: '🥧', Tarts: '🍮', Cheesecakes: '🍰', Macarons: '🍡',
+}
+
+function getItemImage(name: string): string {
+  const dish = dishes.find((d) => d.name === name)
+  if (dish?.imageUrl) return dish.imageUrl
+  const category = Object.keys(categoryEmoji).find((cat) => name.toLowerCase().includes(cat.toLowerCase().replace(/s$/, '')))
+  return category || '🧁'
+}
 
 interface OrderItem {
   name: string
@@ -83,8 +98,15 @@ export const Route = createFileRoute('/orders')({
 })
 
 function RouteComponent() {
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
   const { user, loading } = useAuth()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate({ to: '/auth' })
+    }
+  }, [user, loading, navigate])
 
   if (loading) {
     return (
@@ -95,7 +117,6 @@ function RouteComponent() {
   }
 
   if (!user) {
-    navigate({ to: '/auth' })
     return null
   }
 
@@ -136,12 +157,29 @@ function RouteComponent() {
                 </div>
 
                 <div className="border-t border-dusty-rose pt-4 space-y-2">
-                  {order.items.map((item, idx) => (
-                    <div key={idx} className="flex justify-between text-sm">
-                      <span className="text-chocolate">{item.name} x{item.quantity}</span>
-                      <span className="font-medium text-chocolate">₹{item.price * item.quantity}</span>
-                    </div>
-                  ))}
+                  {order.items.map((item, idx) => {
+                    const imgUrl = getItemImage(item.name)
+                    const hasFailed = failedImages.has(item.name + idx)
+                    return (
+                      <div key={idx} className="flex items-center gap-3 text-sm">
+                        <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-base">
+                          {hasFailed || !imgUrl.startsWith('/') ? (
+                            <span>{categoryEmoji[Object.keys(categoryEmoji).find((c) => item.name.includes(c)) || ''] || '🧁'}</span>
+                          ) : (
+                            <img
+                              src={imgUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={() => setFailedImages((prev) => new Set(prev).add(item.name + idx))}
+                            />
+                          )}
+                        </div>
+                        <span className="flex-1 text-chocolate">{item.name} x{item.quantity}</span>
+                        <span className="font-medium text-chocolate">₹{item.price * item.quantity}</span>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <div className="border-t border-dusty-rose pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">

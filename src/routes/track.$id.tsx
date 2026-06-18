@@ -4,6 +4,18 @@ import { Check, Package, ChefHat, Truck, Home, ArrowLeft, MapPin } from 'lucide-
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { dishes } from '@/data/dishes'
+
+const categoryEmoji: Record<string, string> = {
+  Cakes: '🎂', Cookies: '🍪', Pastries: '🥐', Breads: '🍞',
+  Muffins: '🧁', Cupcakes: '🧁', Brownies: '🍫', Donuts: '🍩',
+  Pies: '🥧', Tarts: '🍮', Cheesecakes: '🍰', Macarons: '🍡',
+}
+
+function getItemImage(name: string): string {
+  const dish = dishes.find((d) => d.name === name)
+  return dish?.imageUrl || ''
+}
 
 const steps = [
   { label: 'Order Placed', icon: Package },
@@ -52,6 +64,7 @@ export const Route = createFileRoute('/track/$id')({
 function RouteComponent() {
   const { id } = Route.useParams()
   const [currentStep, setCurrentStep] = useState(statusMap[mockOrder.status] || 1)
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
 
   const advanceStep = useCallback(() => {
     setCurrentStep((prev) => {
@@ -172,12 +185,29 @@ function RouteComponent() {
                 Placed on {new Date(mockOrder.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
               <div className="space-y-2">
-                {mockOrder.items.map((item, idx) => (
-                  <div key={idx} className="flex justify-between text-sm">
-                    <span className="text-chocolate">{item.name} x{item.quantity}</span>
-                    <span className="font-medium text-chocolate">₹{item.price * item.quantity}</span>
-                  </div>
-                ))}
+                {mockOrder.items.map((item, idx) => {
+                  const imgUrl = getItemImage(item.name)
+                  const hasFailed = failedImages.has(item.name + idx)
+                  return (
+                    <div key={idx} className="flex items-center gap-3 text-sm">
+                      <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-base">
+                        {hasFailed || !imgUrl ? (
+                          <span>{Object.entries(categoryEmoji).find(([k]) => item.name.includes(k))?.[1] || '🧁'}</span>
+                        ) : (
+                          <img
+                            src={imgUrl}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                            onError={() => setFailedImages((prev) => new Set(prev).add(item.name + idx))}
+                          />
+                        )}
+                      </div>
+                      <span className="flex-1 text-chocolate">{item.name} x{item.quantity}</span>
+                      <span className="font-medium text-chocolate">₹{item.price * item.quantity}</span>
+                    </div>
+                  )
+                })}
               </div>
               <div className="border-t border-dusty-rose pt-3 flex justify-between font-semibold">
                 <span className="text-chocolate">Total</span>

@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router"
 import { Star, Plus } from "lucide-react"
 import { useCartStore } from "@/lib/api/cart-store"
-import { generateProductImageUrl } from "@/lib/api/product-images"
+import ProductImage from "@/components/ProductImage"
 
 export interface Product {
   id: string
@@ -21,18 +21,8 @@ interface ProductCardProps {
   product: Product
 }
 
-const externalPlaceholderPattern = /^https?:\/\/(placehold\.co|via\.placeholder\.com|dummyimage\.com)/
-
-function resolveImage(product: Product): string {
-  if (!product.image || externalPlaceholderPattern.test(product.image)) {
-    return generateProductImageUrl(product.name, product.category)
-  }
-  return product.image
-}
-
 export default function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem)
-  const imageUrl = resolveImage(product)
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -41,7 +31,7 @@ export default function ProductCard({ product }: ProductCardProps) {
       productId: product.id,
       name: product.name,
       price: product.price,
-      image: imageUrl,
+      image: product.image,
       removedIngredients: [],
     })
   }
@@ -53,11 +43,10 @@ export default function ProductCard({ product }: ProductCardProps) {
         style={{ backgroundColor: "#FFFFFF", borderRadius: "24px", boxShadow: "0 8px 32px rgba(93,64,55,0.08)" }}
       >
         <div className="relative overflow-hidden" style={{ aspectRatio: "4/3", borderRadius: "24px 24px 0 0" }}>
-          <img
-            src={imageUrl}
+          <ProductImage
+            src={product.image}
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            loading="lazy"
+            className="h-full w-full transition-transform duration-300 group-hover:scale-105"
           />
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {product.is_bestseller && (

@@ -2,36 +2,8 @@ import { createFileRoute, Link } from '@tanstack/react-router'
 import { ArrowRight, Star, Leaf, Heart, Truck, BadgeIndianRupee, ShoppingBag, CakeSlice, Cookie, Croissant, Wheat, Square, Gift, PieChart, CircleOff, Triangle, CircleDot } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import ProductCard from '@/components/ProductCard'
-
-interface Product {
-  id: string
-  name: string
-  category: string
-  price: number
-  image: string
-  description: string
-  ingredients: string[]
-  rating: number
-  reviews: number
-  isBestseller: boolean
-  isNew: boolean
-}
-
-const products: Product[] = [
-  { id: '1', name: 'Classic Chocolate Cake', category: 'Cakes', price: 650, image: 'https://placehold.co/400x300/8B4513/F5DEB3?text=Chocolate+Cake', description: 'Rich, moist chocolate cake with creamy chocolate frosting. A timeless favorite for any occasion.', ingredients: ['Flour', 'Sugar', 'Cocoa Powder', 'Eggs', 'Butter', 'Vanilla Extract'], rating: 4.8, reviews: 124, isBestseller: true, isNew: false },
-  { id: '2', name: 'Red Velvet Cake', category: 'Cakes', price: 750, image: 'https://placehold.co/400x300/8B4513/F5DEB3?text=Red+Velvet', description: 'Velvety red layers with cream cheese frosting. The perfect balance of sweetness and tang.', ingredients: ['Flour', 'Sugar', 'Cocoa Powder', 'Buttermilk', 'Cream Cheese', 'Red Food Color'], rating: 4.7, reviews: 98, isBestseller: true, isNew: false },
-  { id: '3', name: 'Chocolate Chip Cookies', category: 'Cookies', price: 250, image: 'https://placehold.co/400x300/D2691E/FFE4B5?text=Choc+Chip+Cookies', description: 'Soft, chewy cookies loaded with premium chocolate chips. Baked to golden perfection.', ingredients: ['Flour', 'Butter', 'Brown Sugar', 'Chocolate Chips', 'Eggs', 'Vanilla'], rating: 4.9, reviews: 156, isBestseller: true, isNew: false },
-  { id: '4', name: 'French Croissant', category: 'Pastries', price: 180, image: 'https://placehold.co/400x300/DEB887/8B4513?text=French+Croissant', description: 'Buttery, flaky, golden-brown croissant made with traditional French techniques.', ingredients: ['Flour', 'Butter', 'Yeast', 'Sugar', 'Salt', 'Milk'], rating: 4.6, reviews: 89, isBestseller: true, isNew: false },
-  { id: '5', name: 'Sourdough Bread', category: 'Breads', price: 350, image: 'https://placehold.co/400x300/F5DEB3/8B4513?text=Sourdough+Bread', description: 'Artisan sourdough with a crisp crust and soft, tangy interior. Naturally leavened.', ingredients: ['Flour', 'Water', 'Salt', 'Sourdough Starter'], rating: 4.5, reviews: 67, isBestseller: true, isNew: false },
-  { id: '6', name: 'Blueberry Muffin', category: 'Muffins', price: 180, image: 'https://placehold.co/400x300/CD853F/FFF8DC?text=Blueberry+Muffin', description: 'Fluffy muffins bursting with fresh blueberries and a hint of lemon zest.', ingredients: ['Flour', 'Sugar', 'Blueberries', 'Butter', 'Eggs', 'Lemon Zest'], rating: 4.4, reviews: 73, isBestseller: true, isNew: false },
-  { id: '7', name: 'New York Cheesecake', category: 'Cheesecakes', price: 650, image: 'https://placehold.co/400x300/FFFACD/8B4513?text=NY+Cheesecake', description: 'Creamy, dense New York-style cheesecake on a graham cracker crust. Pure indulgence.', ingredients: ['Cream Cheese', 'Sugar', 'Eggs', 'Vanilla', 'Graham Crackers', 'Butter'], rating: 4.9, reviews: 112, isBestseller: true, isNew: false },
-  { id: '8', name: 'Apple Pie', category: 'Pies', price: 450, image: 'https://placehold.co/400x300/FF8C00/FFF8DC?text=Apple+Pie', description: 'Classic apple pie with cinnamon-spiced filling in a flaky, buttery crust.', ingredients: ['Apples', 'Flour', 'Butter', 'Cinnamon', 'Sugar', 'Nutmeg'], rating: 4.6, reviews: 85, isBestseller: true, isNew: false },
-  { id: '9', name: 'Assorted Macarons', category: 'Macarons', price: 250, image: 'https://placehold.co/400x300/E6E6FA/4B0082?text=Macarons', description: 'Delicate French macarons in assorted flavors. A colorful treat for every palate.', ingredients: ['Almond Flour', 'Egg Whites', 'Sugar', 'Food Coloring', 'Buttercream'], rating: 4.7, reviews: 94, isBestseller: true, isNew: false },
-  { id: '10', name: 'Walnut Brownie', category: 'Brownies', price: 280, image: 'https://placehold.co/400x300/3E2723/D7CCC8?text=Walnut+Brownie', description: 'Fudgy chocolate brownies loaded with crunchy walnuts. A chocolate lovers dream.', ingredients: ['Chocolate', 'Butter', 'Sugar', 'Eggs', 'Flour', 'Walnuts'], rating: 4.8, reviews: 103, isBestseller: true, isNew: false },
-  { id: '11', name: 'Glazed Donut', category: 'Donuts', price: 150, image: 'https://placehold.co/400x300/FF1493/FFF0F5?text=Glazed+Donut', description: 'Light, fluffy donuts with a sweet, glossy glaze. Melt-in-your-mouth delicious.', ingredients: ['Flour', 'Sugar', 'Yeast', 'Eggs', 'Butter', 'Vanilla'], rating: 4.5, reviews: 78, isBestseller: true, isNew: false },
-  { id: '12', name: 'Fruit Tart', category: 'Tarts', price: 380, image: 'https://placehold.co/400x300/FFD700/8B4513?text=Fruit+Tart', description: 'Crisp pastry shell filled with velvety custard and topped with fresh seasonal fruits.', ingredients: ['Flour', 'Butter', 'Custard', 'Mixed Fruits', 'Sugar', 'Gelatin'], rating: 4.6, reviews: 91, isBestseller: true, isNew: false },
-]
+import { DishCard } from '@/components/DishCard'
+import { dishes } from '@/data/dishes'
 
 const categories = [
   { name: 'Cakes', icon: CakeSlice, color: 'bg-amber-100 text-amber-700' },
@@ -105,8 +77,10 @@ function RouteComponent() {
           <p className="text-muted-foreground">Most loved treats by our customers</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
+          {dishes.slice(0, 12).map((dish) => (
+            <Link key={dish.id} to="/product/$id" params={{ id: String(dish.id) }}>
+              <DishCard dish={dish} />
+            </Link>
           ))}
         </div>
         <div className="text-center mt-8">

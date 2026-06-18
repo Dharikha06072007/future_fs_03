@@ -9,6 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCartStore } from '@/lib/api/cart-store'
 import { toast } from 'sonner'
 
+const categoryEmoji: Record<string, string> = {
+  Cakes: '🎂', Cookies: '🍪', Pastries: '🥐', Breads: '🍞',
+  Muffins: '🧁', Cupcakes: '🧁', Brownies: '🍫', Donuts: '🍩',
+  Pies: '🥧', Tarts: '🍮', Cheesecakes: '🍰', Macarons: '🍡',
+}
+
 const checkoutSchema = z.object({
   fullName: z.string().min(2, 'Name must be at least 2 characters'),
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
@@ -28,10 +34,16 @@ export const Route = createFileRoute('/checkout')({
 })
 
 function RouteComponent() {
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
   const { items, total, itemCount, clearCart } = useCartStore()
   const navigate = useNavigate()
   const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cod'>('cod')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const getFallback = (name: string) => {
+    const cat = Object.entries(categoryEmoji).find(([_, emoji]) => name.includes(emoji))?.[0]
+    return categoryEmoji[cat || ''] || '🧁'
+  }
 
   const { register, handleSubmit, formState: { errors }, watch, setValue } = useForm<CheckoutForm>({
     resolver: zodResolver(checkoutSchema),
@@ -215,8 +227,20 @@ function RouteComponent() {
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {items.map((item) => (
                       <div key={item.productId} className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-vanilla to-caramel shrink-0 flex items-center justify-center text-lg shadow-sm">
-                          🧁
+                        <div className="w-12 h-12 rounded-xl shrink-0 overflow-hidden shadow-sm">
+                          {failedImages.has(item.productId) || !item.image ? (
+                            <div className="w-full h-full bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-lg">
+                              {getFallback(item.name)}
+                            </div>
+                          ) : (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={() => setFailedImages((prev) => new Set(prev).add(item.productId))}
+                            />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-chocolate truncate">{item.name}</p>
