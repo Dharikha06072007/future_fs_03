@@ -4,6 +4,9 @@ import { Check, Package, ChefHat, Truck, Home, ArrowLeft, MapPin } from 'lucide-
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { useAuth } from '@/lib/api/use-auth'
+import { fetchOrderById } from '@/lib/api/order-store'
+import type { Order } from '@/lib/api/order-store'
 import { dishes } from '@/data/dishes'
 
 const categoryEmoji: Record<string, string> = {
@@ -33,38 +36,28 @@ const statusMap: Record<string, number> = {
   'Delivered': 5,
 }
 
-interface OrderDetail {
-  id: string
-  items: { name: string; quantity: number; price: number }[]
-  total: number
-  status: keyof typeof statusMap
-  deliveryAddress: string
-  estimatedTime: string
-  date: string
-}
-
-const mockOrder: OrderDetail = {
-  id: 'ORD-2024-002',
-  items: [
-    { name: 'Red Velvet Cake', quantity: 1, price: 750 },
-    { name: 'French Croissant', quantity: 3, price: 180 },
-    { name: 'Blueberry Muffin', quantity: 2, price: 180 },
-  ],
-  total: 1470,
-  status: 'Out for Delivery',
-  deliveryAddress: '123 Baker Street, New Delhi, Delhi 110001',
-  estimatedTime: '15-20 minutes',
-  date: '2024-12-18',
-}
-
 export const Route = createFileRoute('/track/$id')({
   component: RouteComponent,
 })
 
 function RouteComponent() {
   const { id } = Route.useParams()
-  const [currentStep, setCurrentStep] = useState(statusMap[mockOrder.status] || 1)
+  const { user, loading: authLoading } = useAuth()
+  const [order, setOrder] = useState<Order | null>(null)
+  const [orderLoading, setOrderLoading] = useState(true)
+  const [currentStep, setCurrentStep] = useState(1)
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    if (authLoading || !user) return
+    setOrderLoading(true)
+    fetchOrderById(id, user.id, user.email)
+      .then((o) => {
+        setOrder(o)
+        if (o) setCurrentStep(statusMap[o.status] || 1)
+      })
+      .finally(() => setOrderLoading(false))
+  }, [id, user, authLoading])
 
   const advanceStep = useCallback(() => {
     setCurrentStep((prev) => {
@@ -74,12 +67,20 @@ function RouteComponent() {
   }, [])
 
   useEffect(() => {
-    if (currentStep >= 5) return
+    if (currentStep >= 5 || !order) return
     const interval = setInterval(advanceStep, 5000)
     return () => clearInterval(interval)
-  }, [currentStep, advanceStep])
+  }, [currentStep, advanceStep, order])
 
-  if (id !== mockOrder.id) {
+  if (authLoading || orderLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center bg-warm-cream">
+        <div className="animate-pulse text-lg text-muted-foreground">Loading...</div>
+      </div>
+    )
+  }
+
+  if (!order) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 bg-warm-cream">
         <h2 className="font-serif text-2xl text-chocolate mb-2">Order Not Found</h2>
@@ -93,6 +94,8 @@ function RouteComponent() {
       </div>
     )
   }
+
+  const statusLabel = Object.keys(statusMap).find((k) => statusMap[k] === currentStep) || order.status
 
   return (
     <div className="min-h-screen bg-warm-cream">
@@ -120,7 +123,7 @@ function RouteComponent() {
                 <span className="text-sm font-medium text-mint">Live</span>
               </div>
               <Badge variant="default" className="text-sm px-4 py-1">
-                {Object.keys(statusMap).find((k) => statusMap[k] === currentStep) || mockOrder.status}
+                {statusLabel}
               </Badge>
             </div>
 
@@ -182,40 +185,51 @@ function RouteComponent() {
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Placed on {new Date(mockOrder.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                Placed on {new Date(order.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
               </p>
               <div className="space-y-2">
-                {mockOrder.items.map((item, idx) => {
+                {order.items.map((item, idx) => {
                   const imgUrl = getItemImage(item.name)
                   const hasFailed = failedImages.has(item.name + idx)
                   return (
-                    <div key={idx} className="flex items-center gap-3 text-sm">
-                      <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-base">
-                        {hasFailed || !imgUrl ? (
-                          <span>{Object.entries(categoryEmoji).find(([k]) => item.name.includes(k))?.[1] || '🧁'}</span>
-                        ) : (
-                          <img
-                            src={imgUrl}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                            loading="lazy"
-                            onError={() => setFailedImages((prev) => new Set(prev).add(item.name + idx))}
-                          />
-                        )}
+                    <div key={idx} className="text-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg shrink-0 overflow-hidden bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center text-base">
+                          {hasFailed || !imgUrl ? (
+                            <span>{Object.entries(categoryEmoji).find(([k]) => item.name.includes(k))?.[1] || '🧁'}</span>
+                          ) : (
+                            <img
+                              src={imgUrl}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                              onError={() => setFailedImages((prev) => new Set(prev).add(item.name + idx))}
+                            />
+                          )}
+                        </div>
+                        <span className="flex-1 text-chocolate">{item.name} x{item.quantity}</span>
+                        <span className="font-medium text-chocolate">₹{item.price * item.quantity}</span>
                       </div>
-                      <span className="flex-1 text-chocolate">{item.name} x{item.quantity}</span>
-                      <span className="font-medium text-chocolate">₹{item.price * item.quantity}</span>
+                      {item.removedIngredients && item.removedIngredients.length > 0 && (
+                        <div className="flex flex-wrap gap-1 ml-[52px] mt-1">
+                          {item.removedIngredients.map((ing) => (
+                            <span key={ing} className="text-xs bg-[#C62828]/10 text-[#C62828] px-1.5 py-0.5 rounded-full">
+                              -{ing}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )
                 })}
               </div>
               <div className="border-t border-dusty-rose pt-3 flex justify-between font-semibold">
                 <span className="text-chocolate">Total</span>
-                <span className="text-strawberry">₹{mockOrder.total}</span>
+                <span className="text-strawberry">₹{order.total}</span>
               </div>
               {currentStep < 5 && (
                 <div className="bg-strawberry/5 text-strawberry rounded-xl px-3 py-2 text-sm font-medium text-center border border-strawberry/20">
-                  Estimated delivery: {mockOrder.estimatedTime}
+                  Estimated delivery: 30-45 minutes
                 </div>
               )}
             </CardContent>
@@ -228,7 +242,7 @@ function RouteComponent() {
             <CardContent>
               <div className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-strawberry shrink-0 mt-0.5" />
-                <p className="text-sm text-chocolate">{mockOrder.deliveryAddress}</p>
+                <p className="text-sm text-chocolate">{order.deliveryAddress}</p>
               </div>
             </CardContent>
           </Card>
