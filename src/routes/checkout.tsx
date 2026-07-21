@@ -279,7 +279,7 @@ function RouteComponent() {
                     <div className="bg-white rounded-2xl p-6 text-center border border-caramel space-y-4">
                       <h4 className="font-semibold text-chocolate">Scan to Pay</h4>
                       <img
-                        src={qrUrl}
+                        src="/images/upi-qr-code.png"
                         alt="UPI QR Code"
                         className="w-52 h-52 mx-auto rounded-xl border border-dusty-rose shadow-sm"
                         loading="eager"
